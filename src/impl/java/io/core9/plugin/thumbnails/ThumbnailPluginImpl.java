@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.coobird.thumbnailator.Thumbnails;
@@ -20,7 +21,6 @@ import net.xeoh.plugins.base.annotations.injections.InjectPlugin;
 
 import com.google.common.io.ByteStreams;
 
-// TODO FLUSH CACHE
 // TODO DELETE CACHE WHEN PROFILE CHANGED
 // TODO DELETE CACHE WHEN PROFILE DELETED
 
@@ -91,8 +91,6 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	 * @throws ProfileDoesntExistException 
 	 */
 	public void generateThumbnail(VirtualHost vhost, String db, InputStream original, String path, String profileName) throws IOException, ProfileDoesntExistException {
-		Map<String,Object> file = new HashMap<String, Object>();
-		file.put("filename", "/" + profileName + path);
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		try {
 			ImageProfile profile = profiles.get(vhost).get(profileName);
@@ -100,6 +98,11 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 				throw new ProfileDoesntExistException();
 			}
 			Thumbnails.of(original).size(profile.getWidth(), profile.getHeight()).toOutputStream(os);
+			Map<String,Object> file = new HashMap<String, Object>();
+			Map<String,Object> metadata = new HashMap<String, Object>();
+			metadata.put("profile", profileName);
+			file.put("filename", "/" + profileName + path);
+			file.put("metadata", metadata);
 			database.addStaticFile(db, BUCKET, file, new ByteArrayInputStream(os.toByteArray()));
 		} catch (NullPointerException e) {
 			throw new ProfileDoesntExistException();
@@ -113,7 +116,51 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 
 	@Override
 	public void handle(Request request) {
-		createProfiles(request.getVirtualHost());
+		String type = (String) request.getParams().get("type");
+		String name = (String) request.getParams().get("id");
+		switch(type) {
+		case "refresh":
+			createProfiles(request.getVirtualHost());
+			request.getResponse().end();
+			break;
+		case "flush":
+			if(name != null) {
+				flushProfile(request.getVirtualHost(), name);
+			} else {
+				flushProfiles(request.getVirtualHost());
+			}
+			request.getResponse().end();
+			break;
+		default:
+			break;
+		}		
+	}
+
+	/**
+	 * Flush an image profile (by name)
+	 * @param vhost
+	 * @param name
+	 */
+	private void flushProfile(VirtualHost vhost, String name) {
+		String db = (String) vhost.getContext("database");
+		Map<String,Object> metadata = new HashMap<String, Object>();
+		metadata.put("profile", name);
+		Map<String,Object> query = new HashMap<String, Object>();
+		query.put("metadata", metadata);
+		List<Map<String,Object>> files = database.queryStaticFiles(db, BUCKET, query);
+		for(Map<String,Object> file : files) {
+			database.removeStaticFile(db, BUCKET, (String) file.get("_id"));
+		}
+	}
+
+	/**
+	 * Flush all image profiles for a vhost
+	 * @param vhost
+	 */
+	private void flushProfiles(VirtualHost vhost) {
+		for(String profile : profiles.get(vhost).keySet()) {
+			flushProfile(vhost, profile);
+		}
 	}
 
 	@Override
@@ -123,6 +170,10 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 		}
 	}
 
+	/**
+	 * Create the profiles for a virtual host
+	 * @param vhost
+	 */
 	private void createProfiles(VirtualHost vhost) {
 		Map<String, ImageProfile> registry = profiles.get(vhost);
 		if(registry == null) {
