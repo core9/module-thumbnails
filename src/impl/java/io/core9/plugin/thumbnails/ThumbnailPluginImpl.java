@@ -69,7 +69,16 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 		String profileName = (String) req.getParams().get("p");
 		String filename = req.getPath().substring(7);
 		if(profileName == null) {
-			req.getResponse().sendBinary(ByteStreams.toByteArray(database.getStaticFile((String) req.getVirtualHost().getContext("database"), "static", filename)));
+			byte[] bin = null;
+			try {
+				bin = ByteStreams.toByteArray(database.getStaticFile((String) req.getVirtualHost().getContext("database"), "static", filename));	
+				req.getResponse().sendBinary(bin);
+			} catch (Exception e) {
+				req.getResponse().setStatusCode(404);
+				req.getResponse().setStatusMessage("File not found");
+			}
+
+			
 		} else if(profileName.equals("d")) {
 			req.getResponse().putHeader("Content-Type", "image/gif");
 			req.getResponse().sendBinary(DUMMY);
