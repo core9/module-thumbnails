@@ -22,10 +22,11 @@ task publishBintray (type: org._10ne.gradle.rest.RestTask, dependsOn: bintrayUpl
 dependencies {
 	apiCompile 'io.core9:core-api:+'
 	apiCompile 'io.core9:module-admin-api:+'
+	apiCompile 'io.core9:module-database-api:+'
 	apiCompile 'io.core9:module-server-api:+'
 	
 	implCompile 'io.core9:module-server-vertx-api:+'
-	implCompile 'io.core9:module-database-mongodb-api:+'
+	implCompile 'io.core9:module-files-manager-api:+'
 	implCompile 'com.google.guava:guava:15.0'
 	implCompile 'net.coobird:thumbnailator:0.4.7'	
 }
