@@ -76,10 +76,8 @@ public class ThumbnailAdminPluginImpl implements ThumbnailAdminPlugin {
 	 * @param name
 	 */
 	private void flushProfile(VirtualHost vhost, ImageProfile profile) {
-		Map<String,Object> metadata = new HashMap<String, Object>();
-		metadata.put("profile", profile.getName());
 		Map<String,Object> query = new HashMap<String, Object>();
-		query.put("metadata", metadata);
+		query.put("metadata.profile", profile.getName());
 		files.removeFiles(profile.retrieveDatabase(vhost), profile.retrieveBucket(), query);
 	}
 }
