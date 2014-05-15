@@ -94,8 +94,12 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 			req.getResponse().sendBinary(DUMMY);
 		} else {
 			InputStream in = retrieveImage(vhost, profiles.get(vhost).get(profileName), filename);
-			req.getResponse().sendBinary(ByteStreams.toByteArray(in));
-			in.close();
+			if(in == null) {
+				req.getResponse().setStatusCode(404);
+			} else {
+				req.getResponse().sendBinary(ByteStreams.toByteArray(in));
+				in.close();
+			}
 		}
 	}
 	
