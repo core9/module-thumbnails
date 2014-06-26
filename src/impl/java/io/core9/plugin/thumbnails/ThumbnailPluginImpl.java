@@ -5,10 +5,10 @@ import io.core9.plugin.database.repository.NoCollectionNamePresentException;
 import io.core9.plugin.database.repository.RepositoryFactory;
 import io.core9.plugin.filesmanager.FileRepository;
 import io.core9.plugin.filesmanager.handler.StaticFilesHandler;
+import io.core9.plugin.server.Server;
 import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.handler.Middleware;
 import io.core9.plugin.server.request.Request;
-import io.core9.plugin.server.vertx.VertxServer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,7 +47,7 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	private StaticFilesHandler staticHandler;
 	
 	@InjectPlugin
-	private VertxServer server;
+	private Server server;
 	
 	@Override
 	public void execute() {

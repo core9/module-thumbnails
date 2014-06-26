@@ -25,7 +25,6 @@ dependencies {
 	apiCompile 'io.core9:module-database-api:+'
 	apiCompile 'io.core9:module-server-api:+'
 	
-	implCompile 'io.core9:module-server-vertx-api:+'
 	implCompile 'io.core9:module-files-manager-api:+'
 	implCompile 'com.google.guava:guava:15.0'
 	implCompile 'net.coobird:thumbnailator:0.4.7'	
