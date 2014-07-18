@@ -153,13 +153,6 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	}
 
 	@Override
-	public void process(VirtualHost[] vhosts) {
-		for(VirtualHost vhost : vhosts) {
-			createProfiles(vhost);
-		}
-	}
-	
-	@Override
 	public void createProfiles(VirtualHost vhost) {
 		List<ImageProfile> profiles = profileRepository.getAll(vhost);
 		Map<String,ImageProfile> vhostProfiles = new HashMap<String,ImageProfile>();
@@ -172,5 +165,15 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	@Override
 	public Map<String, ImageProfile> getVirtualHostRegistry(VirtualHost vhost) {
 		return this.profiles.get(vhost);
+	}
+
+	@Override
+	public void addVirtualHost(VirtualHost vhost) {
+		createProfiles(vhost);
+	}
+
+	@Override
+	public void removeVirtualHost(VirtualHost vhost) {
+		this.profiles.remove(vhost);		
 	}
 }
