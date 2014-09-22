@@ -14,9 +14,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.DelayQueue;
 
 import net.coobird.thumbnailator.Thumbnails;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
@@ -34,6 +39,9 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	private CrudRepository<ImageProfile> profileRepository;
 	
 	private Map<VirtualHost, Map<String, ImageProfile>> profiles = new HashMap<VirtualHost, Map<String, ImageProfile>>();
+	private BlockingQueue<GenerateThumbnailTask> tasks = new DelayQueue<GenerateThumbnailTask>();
+	private int currentlyGenerating = 0;
+	private Timer delayedGenerator = new java.util.Timer();
 		
 	@PluginLoaded
 	public void onRepositoryFactoryLoaded(RepositoryFactory factory) throws NoCollectionNamePresentException {
@@ -135,13 +143,50 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	 * @throws ProfileDoesntExistException 
 	 */
 	public InputStream generateThumbnail(VirtualHost vhost, ImageProfile profile, InputStream original, String path) throws IOException {
+		if(currentlyGenerating > 2) {
+			GenerateThumbnailTask task = new GenerateThumbnailTask(vhost, profile, original, path, currentlyGenerating * 2000);
+			if(!tasks.contains(task)) {
+				tasks.add(task);
+			}
+			processTasks();
+			return null;
+		} else {
+			return runThumbnailGeneration(vhost, profile, original, path);
+		}
+	}
+
+	private void processTasks() throws IOException {
+		if(tasks.size() > 0) {
+			final Collection<GenerateThumbnailTask> expired = new ArrayList<GenerateThumbnailTask>();
+		    tasks.drainTo( expired );
+		    for(final GenerateThumbnailTask postponed : expired ) {
+		    	generateThumbnail(postponed.getVhost(), postponed.getProfile(), postponed.getOriginal(), postponed.getPath());
+		    }
+		}
+		if(tasks.size() > 0) {
+			delayedGenerator.schedule(
+				new java.util.TimerTask() {
+					@Override
+					public void run() {
+						try {
+							processTasks();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+		        }, 3000);
+		}
+	}
+	
+	private InputStream runThumbnailGeneration(VirtualHost vhost, ImageProfile profile, InputStream original, String path) throws IOException {
+		currentlyGenerating++;
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		Thumbnails.of(original).size(profile.getWidth(), profile.getHeight()).toOutputStream(os);
 		String folder = "/" + profile.getName() + path.substring(0, path.lastIndexOf('/') + 1);
 		String filename  = path.substring(path.lastIndexOf('/') + 1);
 		Map<String,Object> file = new HashMap<String, Object>();
 		file.put("filename", filename);
-		
 		fileRepository.ensureFolderExists(profile.retrieveDatabase(vhost), profile.retrieveBucket(), folder);
 		Map<String,Object> metadata = new HashMap<String, Object>();
 		metadata.put("profile", profile.getName());
@@ -149,6 +194,7 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 		file.put("metadata", metadata);
 		byte[] tempFile = os.toByteArray();
 		fileRepository.addFile(profile.retrieveDatabase(vhost), profile.retrieveBucket(), file, new ByteArrayInputStream(tempFile));
+		currentlyGenerating--;
 		return new ByteArrayInputStream(tempFile);
 	}
 
