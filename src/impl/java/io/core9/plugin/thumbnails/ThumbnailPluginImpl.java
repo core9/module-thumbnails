@@ -98,6 +98,7 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 				req.getResponse().setStatusMessage("File not found");
 			}
 		} else if(profileName.equals("d")) {
+			req.getResponse().putHeader("Link", "<" + req.getScheme() + "://" + req.getHostname() + req.getPath() + ">; rel=\"canonical\"");
 			req.getResponse().putHeader("Content-Type", "image/gif");
 			req.getResponse().sendBinary(DUMMY);
 		} else {
@@ -105,6 +106,7 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 			if(in == null) {
 				req.getResponse().setStatusCode(404);
 			} else {
+				req.getResponse().putHeader("Link", "<" + req.getScheme() + "://" + req.getHostname() + req.getPath() + ">; rel=\"canonical\"");
 				req.getResponse().sendBinary(ByteStreams.toByteArray(in));
 				in.close();
 			}
