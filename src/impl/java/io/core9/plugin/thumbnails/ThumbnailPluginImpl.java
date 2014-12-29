@@ -94,6 +94,7 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 				req.getResponse().sendBinary(bin);
 				in.close();
 			} catch (Exception e) {
+				// TODO RETURN NOT FOUND IMAGE
 				req.getResponse().setStatusCode(404);
 				req.getResponse().setStatusMessage("File not found");
 			}
@@ -104,6 +105,7 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 		} else {
 			InputStream in = retrieveImage(vhost, profiles.get(vhost).get(profileName), filename);
 			if(in == null) {
+				// TODO RETURN NOT FOUND IMAGE
 				req.getResponse().setStatusCode(404);
 			} else {
 				req.getResponse().putHeader("Link", "<" + req.getScheme() + "://" + req.getHostname() + req.getPath() + ">; rel=\"canonical\"");
@@ -184,18 +186,23 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	private InputStream runThumbnailGeneration(VirtualHost vhost, ImageProfile profile, InputStream original, String path) throws IOException {
 		currentlyGenerating++;
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		Thumbnails.of(original).size(profile.getWidth(), profile.getHeight()).toOutputStream(os);
-		String folder = "/" + profile.getName() + path.substring(0, path.lastIndexOf('/') + 1);
-		String filename  = path.substring(path.lastIndexOf('/') + 1);
-		Map<String,Object> file = new HashMap<String, Object>();
-		file.put("filename", filename);
-		fileRepository.ensureFolderExists(profile.retrieveDatabase(vhost), profile.retrieveBucket(), folder);
-		Map<String,Object> metadata = new HashMap<String, Object>();
-		metadata.put("profile", profile.getName());
-		metadata.put("folder", folder);
-		file.put("metadata", metadata);
-		byte[] tempFile = os.toByteArray();
-		fileRepository.addFile(profile.retrieveDatabase(vhost), profile.retrieveBucket(), file, new ByteArrayInputStream(tempFile));
+		byte[] tempFile = null;
+		try {
+			Thumbnails.of(original).size(profile.getWidth(), profile.getHeight()).toOutputStream(os);
+			String folder = "/" + profile.getName() + path.substring(0, path.lastIndexOf('/') + 1);
+			String filename  = path.substring(path.lastIndexOf('/') + 1);
+			Map<String,Object> file = new HashMap<String, Object>();
+			file.put("filename", filename);
+			fileRepository.ensureFolderExists(profile.retrieveDatabase(vhost), profile.retrieveBucket(), folder);
+			Map<String,Object> metadata = new HashMap<String, Object>();
+			metadata.put("profile", profile.getName());
+			metadata.put("folder", folder);
+			file.put("metadata", metadata);
+			tempFile = os.toByteArray();
+			fileRepository.addFile(profile.retrieveDatabase(vhost), profile.retrieveBucket(), file, new ByteArrayInputStream(tempFile));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
 		currentlyGenerating--;
 		return new ByteArrayInputStream(tempFile);
 	}

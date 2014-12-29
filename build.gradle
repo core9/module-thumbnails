@@ -27,5 +27,6 @@ dependencies {
 	
 	implCompile 'io.core9:module-files-manager-api:+'
 	implCompile 'com.google.guava:guava:15.0'
-	implCompile 'net.coobird:thumbnailator:0.4.7'	
+	implCompile 'net.coobird:thumbnailator:0.4.7'
+	implCompile 'com.twelvemonkeys.imageio:imageio-jpeg:3.0.1'
 }
