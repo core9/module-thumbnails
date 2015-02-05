@@ -90,6 +90,27 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 			try {
 				Map<String,Object> contents = staticHandler.getFileContents(vhost, filename);
 				InputStream in = (InputStream) contents.get("stream");
+				if(contents.get("ContentType") != null) {
+					req.getResponse().putHeader("Content-Type", (String) contents.get("ContentType"));
+				} else {
+					String extension = req.getPath().substring(req.getPath().length() - 4);
+					switch (extension) {
+					case ".jpg":
+					case ".JPG":
+						req.getResponse().putHeader("Content-Type", "image/jpeg");
+						break;
+					case ".gif":
+					case ".GIF":
+						req.getResponse().putHeader("Content-Type", "image/gif");
+						break;
+					case ".png":
+					case ".PNG":
+						req.getResponse().putHeader("Content-Type", "image/gif");
+						break;
+					default:
+						break;
+					}
+				}
 				bin = ByteStreams.toByteArray(in);	
 				req.getResponse().sendBinary(bin);
 				in.close();
