@@ -26,8 +26,8 @@ public class ThumbnailAdminPluginImpl implements ThumbnailAdminPlugin {
 
 	@Override
 	public void handle(Request request) {
-		String type = (String) request.getParams().get("type");
-		String name = (String) request.getParams().get("id");
+		String type = (String) request.getPathParams().get("type");
+		String name = (String) request.getPathParams().get("id");
 		switch(type) {
 		case "refresh":
 			createProfiles(request.getVirtualHost());

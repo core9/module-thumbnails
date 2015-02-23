@@ -83,7 +83,7 @@ public class ThumbnailPluginImpl implements ThumbnailPlugin {
 	 */
 	public void sendImage(Request req) throws IOException, ProfileDoesntExistException {
 		VirtualHost vhost = req.getVirtualHost();
-		String profileName = (String) req.getParams().get("p");
+		String profileName = (String) req.getQueryParams().get("p").getFirst();
 		String filename = req.getPath().substring(7);
 		if(profileName == null) {
 			byte[] bin = null;
