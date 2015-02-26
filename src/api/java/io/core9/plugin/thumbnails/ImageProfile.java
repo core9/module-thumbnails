@@ -1,16 +1,21 @@
 package io.core9.plugin.thumbnails;
 
+import io.core9.plugin.database.repository.AbstractCrudEntity;
 import io.core9.plugin.database.repository.Collection;
-import io.core9.plugin.features.processors.ConfigEntity;
+import io.core9.plugin.database.repository.CrudEntity;
 import io.core9.plugin.server.VirtualHost;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Collection("configuration")
-public class ImageProfile extends ConfigEntity {
+public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 
-	private static final long serialVersionUID = -5161036626378452804L;
+	private String database;
+	private String bucket;
+	private String name;
+	private int width;
+	private int height;
 
 	/**
 	 * Set the image profile width
@@ -19,7 +24,7 @@ public class ImageProfile extends ConfigEntity {
 	 * @return
 	 */
 	public ImageProfile setWidth(int width) {
-		this.put("width", width);
+		this.width = width;
 		return this;
 	}
 
@@ -29,7 +34,7 @@ public class ImageProfile extends ConfigEntity {
 	 * @return
 	 */
 	public int getWidth() {
-		return (int) this.get("width");
+		return width;
 	}
 
 	/**
@@ -39,7 +44,7 @@ public class ImageProfile extends ConfigEntity {
 	 * @return
 	 */
 	public ImageProfile setHeight(int height) {
-		this.put("height", height);
+		this.height = height;
 		return this;
 	}
 
@@ -49,7 +54,7 @@ public class ImageProfile extends ConfigEntity {
 	 * @return
 	 */
 	public int getHeight() {
-		return (int) this.get("height");
+		return height;
 	}
 	
 	/**
@@ -57,7 +62,7 @@ public class ImageProfile extends ConfigEntity {
 	 * @return
 	 */
 	public String getName() {
-		return (String) this.get("name");
+		return name;
 	}
 
 	/**
@@ -65,23 +70,23 @@ public class ImageProfile extends ConfigEntity {
 	 * @param name
 	 */
 	public void setName(String name) {
-		this.put("name", name);
+		this.name = name;
 	}
 	
 	public String getDatabase() {
-		return (String) this.get("database");
+		return database;
 	}
 
 	public void setDatabase(String database) {
-		this.put("database", database);
+		this.database = database;
 	}
 
 	public String getBucket() {
-		return (String) this.get("bucket");
+		return bucket;
 	}
 
 	public void setBucket(String bucket) {
-		this.put("bucket", bucket);
+		this.bucket = bucket;
 	}
 	
 	@Override
@@ -92,10 +97,16 @@ public class ImageProfile extends ConfigEntity {
 	}
 
 	public String retrieveDatabase(VirtualHost vhost) {
-		return (String) this.getOrDefault("database", vhost.getContext("database"));
+		if(database != null && !database.equals("")) {
+			return database;
+		}
+		return (String) vhost.getContext("database");
 	}
 	
 	public String retrieveBucket() {
-		return (String) this.getOrDefault("bucket", "imagecache");
+		if(bucket != null && !bucket.equals("")) {
+			return bucket;
+		}
+		return "imagecache";
 	}
 }
