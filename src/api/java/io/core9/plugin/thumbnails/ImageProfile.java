@@ -1,21 +1,16 @@
 package io.core9.plugin.thumbnails;
 
-import io.core9.plugin.database.repository.AbstractCrudEntity;
 import io.core9.plugin.database.repository.Collection;
-import io.core9.plugin.database.repository.CrudEntity;
+import io.core9.plugin.features.processors.ConfigEntity;
 import io.core9.plugin.server.VirtualHost;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Collection("configuration")
-public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
+public class ImageProfile extends ConfigEntity {
 
-	private String database;
-	private String bucket;
-	private String name;
-	private int width;
-	private int height;
+	private static final long serialVersionUID = -5161036626378452804L;
 
 	/**
 	 * Set the image profile width
@@ -24,7 +19,7 @@ public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 	 * @return
 	 */
 	public ImageProfile setWidth(int width) {
-		this.width = width;
+		this.put("width", width);
 		return this;
 	}
 
@@ -34,7 +29,7 @@ public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 	 * @return
 	 */
 	public int getWidth() {
-		return width;
+		return (int) this.get("width");
 	}
 
 	/**
@@ -44,7 +39,7 @@ public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 	 * @return
 	 */
 	public ImageProfile setHeight(int height) {
-		this.height = height;
+		this.put("height", height);
 		return this;
 	}
 
@@ -54,7 +49,7 @@ public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 	 * @return
 	 */
 	public int getHeight() {
-		return height;
+		return (int) this.get("height");
 	}
 	
 	/**
@@ -62,7 +57,7 @@ public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 	 * @return
 	 */
 	public String getName() {
-		return name;
+		return (String) this.get("name");
 	}
 
 	/**
@@ -70,23 +65,23 @@ public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 	 * @param name
 	 */
 	public void setName(String name) {
-		this.name = name;
+		this.put("name", name);
 	}
 	
 	public String getDatabase() {
-		return database;
+		return (String) this.get("database");
 	}
 
 	public void setDatabase(String database) {
-		this.database = database;
+		this.put("database", database);
 	}
 
 	public String getBucket() {
-		return bucket;
+		return (String) this.get("bucket");
 	}
 
 	public void setBucket(String bucket) {
-		this.bucket = bucket;
+		this.put("bucket", bucket);
 	}
 	
 	@Override
@@ -97,16 +92,10 @@ public class ImageProfile extends AbstractCrudEntity implements CrudEntity {
 	}
 
 	public String retrieveDatabase(VirtualHost vhost) {
-		if(database != null && !database.equals("")) {
-			return database;
-		}
-		return (String) vhost.getContext("database");
+		return (String) this.getOrDefault("database", vhost.getContext("database"));
 	}
 	
 	public String retrieveBucket() {
-		if(bucket != null && !bucket.equals("")) {
-			return bucket;
-		}
-		return "imagecache";
+		return (String) this.getOrDefault("bucket", "imagecache");
 	}
 }
